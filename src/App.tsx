@@ -1,26 +1,62 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect, useContext } from "react";
+import "./App.css";
+import axios from "axios";
+import { Paging } from "./components/Paging";
+import { Post } from "./components/Post";
 
-function App() {
+interface IPosts {
+  userId: number;
+  id: number;
+  title: string;
+  body: string;
+}
+
+interface IPageContext {
+  currentNumber: number;
+  handlePageChange: () => void;
+}
+
+export const PageContext = React.createContext<IPageContext | {}>({
+  currentNumber: 1,
+});
+
+const App = () => {
+  const [posts, setPosts] = useState<null | IPosts[]>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPageCount, setTotalPageCount] = useState<number>(10);
+  const baseUrl = `https://jsonplaceholder.typicode.com/posts?_page=${currentPage}&_limit=${totalPageCount}`;
+  let totalNumberOfPages: unknown;
+  const pageNums: number[] = [...new Array(totalPageCount + 1).keys()].slice(1);
+
+  const fetchPosts = async () => {
+    const data = await axios.get(baseUrl);
+    const pageCount = Number(data?.headers["x-total-count"]);
+    totalNumberOfPages = pageCount;
+    setTotalPageCount(Math.round(pageCount / 10));
+    setPosts(data?.data);
+  };
+
+  const handlePageChange = (n: number) => {
+    setCurrentPage(n);
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, [currentPage]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container">
+      <PageContext.Provider value={{ currentPage, handlePageChange }}>
+        {posts &&
+          posts.map(({ id, title, body }) => (
+            <Post key={id} id={id} title={title} body={body} />
+          ))}
+        <div className={"pages-container"}>
+          <Paging pageNumbers={pageNums} />
+        </div>
+      </PageContext.Provider>
     </div>
   );
-}
+};
 
 export default App;
