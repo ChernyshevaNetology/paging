@@ -12,13 +12,11 @@ interface IPosts {
 }
 
 interface IPageContext {
-  currentNumber: number;
-  handlePageChange: () => void;
+  currentPage: number;
+  handlePageChange: (n: number) => void;
 }
 
-export const PageContext = React.createContext<IPageContext | {}>({
-  currentNumber: 1,
-});
+export const PageContext = React.createContext<IPageContext | {}>({});
 
 const App = () => {
   const [posts, setPosts] = useState<null | IPosts[]>(null);
